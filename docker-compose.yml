@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: marksuser
+      POSTGRES_PASSWORD: markspass
+      POSTGRES_DB: marksdb
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    environment:
+      DB_HOST: db
+      DB_NAME: marksdb
+      DB_USER: marksuser
+      DB_PASSWORD: markspass
+    depends_on:
+      - db
+    ports:
+      - "5000:5000"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+  automark:
+    build: ./automark
+    depends_on:
+      - backend
+      - db
+    profiles:
+      - debug
+
+volumes:
+  postgres_data:
